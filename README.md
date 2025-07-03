@@ -14,28 +14,6 @@ This repository is organized by discipline and technology, allowing for diverse 
 └── mlops/                 # Deployment and production workflows
 ```
 
-## 📋 Setup Instructions
-
-### Python Environment
-```bash
-# Clone the repository
-git clone git@github.com:alvarog2491/alvaro-ai-ml-ds-lab.git
-cd alvaro-ai-ml-ds-lab
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies (when available)
-pip install -r requirements.txt
-```
-
-### R Environment
-```r
-# Install required packages (project specific)
-install.packages(c("tidyverse", "caret", "ggplot2"))
-```
-
 ## 🚀 How to Navigate
 
 **Browse by category**: Each folder contains projects of similar nature
