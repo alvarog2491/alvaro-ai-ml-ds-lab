@@ -1,0 +1,240 @@
+---
+title: "University Faculty Salary Analysis"
+author: "Álvaro Granados Villodre"
+date: "2025-May"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## **Introduction**
+
+This analysis examines the factors influencing university faculty salaries using the "Salaries" dataset from the "car" package in R. The primary objective is to develop and evaluate **Gaussian linear models** to predict faculty salaries based mainly on professional characteristics. Through systematic model development and validation, this study seeks to identify the **most significant predictors of academic compensation** and offer insights into the mechanisms behind salary determination in higher education.
+
+To achieve this, multiple linear regression models have been implemented to explore the relationships between variables, with particular attention to **multicollinearity and predictive performance**. The analysis also includes transformations to capture potential non-linear patterns in the data.
+
+The dataset contains information about 397 university professors with the following variables:
+
+-   **rank**: three levels of professor positions (AsstProf, AssocProf, Prof)
+-   **discipline**: type of teaching discipline (A, B)
+-   **yrs.since.phd**: years since PhD completion
+-   **yrs.service**: years of service
+-   **sex**: gender (Female, Male)
+-   **salary**: salary in dollars
+
+```{r salaries}
+library(carData)
+data(Salaries)
+str(Salaries)
+summary(Salaries)
+```
+
+## **Exploratory Analysis**
+
+This section performs a visual analysis to better understand the relationships between key variables, specifically examining how years of service and years since PhD relate to faculty salaries.
+
+```{r Mostrar relaciones}
+library(ggplot2)
+
+# Plot yrs.service vs. yrs.since.phd
+ggplot(Salaries, aes(x = yrs.since.phd, y = yrs.service)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Years of Service vs. Years Since PhD (Fig. 1)",
+       x = "Years Since PhD",
+       y = "Years of Service")
+
+# Plot salary vs. yrs.since.phd
+ggplot(Salaries, aes(x = yrs.since.phd, y = salary)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Salary vs. Years Since PhD (Fig. 2)",
+       x = "Years Since PhD",
+       y = "Salary")
+
+# Plot salary vs. yrs.service
+ggplot(Salaries, aes(x = yrs.service, y = salary)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Salary vs. Years of Service (Fig. 3)",
+       x = "Years of Service",
+       y = "Salary")
+```
+
+The scatter plots reveal positive linear trends between salary and both years since PhD and years of service. However, a strong correlation between years of service and years since PhD is also observed (Fig. 1), suggesting the **presence of collinearity** between these variables.
+
+## **Initial Regression Model**
+
+The first approach involves training a basic linear regression model that explains salary as a function of years of service and years since PhD.
+
+```{r}
+formula_salary_vs_yrs = as.formula(salary ~ yrs.since.phd + yrs.service)
+lmmodel_salary_vs_yrs <- lm(formula_salary_vs_yrs, data = Salaries)
+summary(lmmodel_salary_vs_yrs)
+```
+
+The initial model results present interesting findings. The positive coefficient for "**yrs.since.phd**" (1562.9) shows that salary rises with years since earning a PhD, which aligns with expectations. Conversely, the negative coefficient for "**yrs.service**" (-629.1) points to an unexpected salary decrease with longer years of service, likely due to **collinearity between these variables**, as illustrated in Figure 1.
+
+The residual standard error of 27.360 represents the average deviation between observed and predicted salaries. With an R² of 0.1883 and an adjusted R² of 0.1842, **the model explains only about 18% of the variance in salary, indicating limited explanatory power.**
+
+## **Gender Incorporation**
+
+To evaluate whether gender improves the predictive model, this categorical variable has been incorporated into the analysis.
+
+```{r}
+formula_salary_vs_yrs_sex = as.formula(salary ~ yrs.since.phd + yrs.service + sex)
+lmmodel_salary_vs_yrs_sex <- lm(formula_salary_vs_yrs_sex, data = Salaries)
+summary(lmmodel_salary_vs_yrs_sex)
+```
+
+**The inclusion of gender (represented by the *sexMale* variable) does not considerably improve the model.** The average residual error remains practically constant (27.280 vs 27.360), and the remaining coefficients stay at similar values. The adjusted coefficient of determination increases minimally from 0.1842 to 0.189, indicating that gender does not provide additional relevant information for predicting salary.
+
+## **Scale Transformations**
+
+To better understand coefficient behavior, different transformations of the dependent variable have been explored. First, salary has been expressed in thousands of dollars.
+
+```{r}
+Salaries$salary1000 <- Salaries$salary / 1000
+formula_salary1000_vs_yrs = as.formula(salary1000 ~ yrs.since.phd + yrs.service)
+lmmodel_salary1000_vs_yrs <- lm(formula_salary1000_vs_yrs, data = Salaries)
+summary(lmmodel_salary1000_vs_yrs)
+```
+
+As expected, when dividing salary by 1000, all betas are proportionally divided by the same factor. This linear transformation does not alter the fundamental relationships of the model, only changes the interpretation scale.
+
+Subsequently, a logarithmic transformation has been applied to salary to explore non-linear relationships.
+
+```{r}
+Salaries$salaryln <- log(Salaries$salary)
+formula_salaryln_vs_yrs = as.formula(salaryln ~ yrs.since.phd + yrs.service)
+lmmodel_salaryln_vs_yrs <- lm(formula_salaryln_vs_yrs, data = Salaries)
+summary(lmmodel_salaryln_vs_yrs)
+```
+
+The **logarithmic transformation maintains the signs of the betas** but significantly reduces their magnitudes. The negative coefficient for years of service (-0.005316) persists, confirming the presence of collinearity. In this transformed model, each additional year of service is associated with a 0.53% decrease in salary.
+
+## **Development of an Improved Model**
+
+To develop a more robust model, a correlation analysis has been performed between all available variables, including categorical variables converted to dummy variables.
+
+```{r}
+library(ggplot2)
+library(reshape2)
+library(fastDummies)
+
+# Create dummy variables
+dummy_columns <- c('rank', 'discipline', 'sex')
+salaries_with_dummies_df <- fastDummies::dummy_cols(Salaries, select_columns = dummy_columns)
+model_vars <- c('yrs.service', 'yrs.since.phd', 'rank_AsstProf', 'rank_AssocProf', 'rank_Prof', 'discipline_A','sex_Female', 'salary')
+
+# Get correlations
+cor_matrix_dummies <- cor(salaries_with_dummies_df[model_vars])
+melted_cor_dummies <- melt(cor_matrix_dummies)
+
+# Visualize correlation matrix
+plot_heatmap <- function(melted_cor){
+ggplot(data = melted_cor, aes(Var1, Var2, fill = value)) +
+  geom_tile(color = "black") +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), name = "Correlation") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  ggtitle("Correlation Matrix (Fig. 4)")
+}
+plot_heatmap(melted_cor_dummies)
+```
+
+The correlation matrix (Fig. 4) confirms the **strong positive correlation between yrs.service and yrs.since.phd**, as well as weaker relationships between rank variables and salary.
+
+Based on this analysis, a model has been developed that includes statistically significant variables while avoiding multicollinearity.
+
+```{r}
+formula_lm <- as.formula(salary ~ sex_Female + yrs.since.phd + rank_Prof + rank_AssocProf + discipline_A)
+model_lm <- lm(formula_lm, data = salaries_with_dummies_df)
+summary(model_lm)
+```
+
+This improved model shows a significant reduction in average residual error (from 27,280 to 22,660) and a considerable increase in explanatory capacity, with R² and adjusted R² increasing from 18% to 44%. The variables rank_Prof, rank_AssocProf, and discipline_A prove to be statistically significant (p \< 0.05).
+
+Based on these results, a final model has been developed using logarithmic transformation of salary and the most significant variables.
+
+```{r}
+formula_lm_transformed <- as.formula(salaryln ~ rank_Prof + rank_AssocProf + discipline_A)
+model_lm_transformed <- lm(formula_lm_transformed, data = salaries_with_dummies_df)
+summary(model_lm_transformed)
+```
+
+This final model presents an average residual error of 0.1817 (on logarithmic scale) and an adjusted **R² of 0.5122, representing a substantial improvement in the model's predictive power.**
+
+## **Automatic Variable Selection**
+
+To validate the variable selection approach, the stepwise method has been applied starting from all available variables.
+
+```{r}
+formula_all <- as.formula(salary ~ yrs.service + yrs.since.phd + rank_AsstProf + rank_AssocProf + rank_Prof + discipline_A + sex_Female + sex_Male)
+model_lm_all <- lm(formula_all, data = salaries_with_dummies_df)
+model_stepwise <- step(model_lm_all, direction = "both", k = 0)
+summary(model_stepwise)
+```
+
+The stepwise method selects a model with yrs.service, yrs.since.phd, rank_AsstProf, rank_AssocProf, and discipline_A, obtaining an average residual error of 22,550 and an adjusted R² of 0.44. While these values are acceptable, they **are inferior to those obtained with our transformed model.** Additionally, the inclusion of collinear variables (yrs.service and yrs.since.phd) complicates model interpretation.
+
+## **Final Model Validation**
+
+To validate the robustness of the final model (model_lm_transformed), a residual analysis has been performed to verify linear regression model assumptions.
+
+```{r}
+residuals <- model_lm_transformed$resid
+
+# Check normality of residuals
+qqnorm(residuals)
+qqline(residuals)
+
+# Histogram of residuals
+hist(residuals,
+     breaks = "Sturges",
+     main = "Histogram of Residuals",
+     xlab = "Residuals",
+     ylab = "Frequency",
+     col = "blue",
+     border = "black")
+
+# Jarque-Bera test
+library(tseries)
+jarque.bera.test(residuals)
+
+# Shapiro-Wilk test
+shapiro.test(residuals)
+
+# Independence of residuals
+plot(residuals~Salaries$salary[order(Salaries$salary)],
+     main="Salary vs Residuals (Fig. 5)",
+     xlab="Salary", ylab="Residuals")
+abline(h=0, lty=2)
+
+# Breusch-Pagan test for heteroscedasticity
+library(lmtest)
+bptest(model_lm_transformed)
+```
+
+The QQ-plot and histogram of residuals show a close approximation to a normal distribution. However, the statistic obtained through the Jarque-Bera test indicates that we can reject the null hypothesis of normality. **This test contradicts what can be visually appreciated through the graphs.**
+
+In the Salary vs. Residuals plot (Fig. 5), no clear pattern is observed in the residuals as salary increases or decreases. Although the residuals are not perfectly centered, **no pattern suggesting heteroscedasticity is apparent.**
+
+## **Conclusions**
+
+The analysis of university faculty salaries reveals several important findings:
+
+1.  **Multicollinearity**: There exists a strong correlation between years of service and years since PhD, which complicates the interpretation of models that include both variables simultaneously.
+
+2.  **Significant Variables**: Academic rank (especially full professor and associate professor) and discipline are the most important salary predictors, explaining approximately 51% of the variance when using logarithmic transformation.
+
+3.  **Gender**: This var does not emerge as a significant predictor in our models, which may result from the data structure or confounding variables.
+
+4.  **Transformations**: The logarithmic transformation of salary considerably improves model fit, suggesting multiplicative relationships between explanatory variables and salary.
+
+The recommended final model uses logarithmic transformation of salary as the dependent variable and includes academic rank and discipline variables as predictors, offering 51% explanatory capacity with good statistical properties in residual analysis.
+
+This analysis provides a solid foundation for understanding the determining factors of university salaries and can serve as a starting point for deeper research on salary equity and compensation policies in the academic environment.
