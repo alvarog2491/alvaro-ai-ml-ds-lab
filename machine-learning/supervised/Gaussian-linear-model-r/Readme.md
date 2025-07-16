@@ -19,9 +19,8 @@ The study addresses multicollinearity issues between predictor variables and exp
 
 ## Viewing the HTML Report
 To view the HTML report with all visualizations and formatted output:
-1. **Download the HTML file** from the repository
-2. **Open locally** in your web browser, or
-3. **Use GitHub HTML Preview**: Copy the GitHub URL of the HTML file and paste it into [htmlpreview.github.io](http://htmlpreview.github.io/) for online viewing
+
+ - [htmlpreview.github.io](http://htmlpreview.github.io/?https://github.com/alvarog2491/alvaro-ai-ml-ds-lab/blob/main/machine-learning/supervised/Gaussian-linear-model-r/Gaussian_linear_model---Salary_Analysis.html)
 
 ## Dataset
 The analysis uses data from 397 university professors with variables including academic rank, discipline, years of service, years since PhD, gender, and salary in dollars.
