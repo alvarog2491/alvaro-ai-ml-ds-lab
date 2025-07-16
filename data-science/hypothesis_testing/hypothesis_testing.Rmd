@@ -1,0 +1,363 @@
+---
+title: "Hypothesis Testing Analysis"
+author: "Álvaro Granados Villodre"
+date: "2025-07-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Hypothesis Testing
+
+### Problem Statement
+
+An e-commerce company has launched a new digital marketing campaign to increase sales on their online platform. Historically, the conversion rate from visitors to buyers has been 8%.
+
+After implementing the new campaign for two weeks, a conversion rate of 11% was recorded in a sample of 350 unique visitors. The marketing team wants to evaluate whether this improvement is statistically significant.
+
+Additionally, the average time users spend on the product page before making a purchase has been measured. Before the campaign, this variable followed a normal distribution with a mean of 4.2 minutes and a standard deviation of 0.9 minutes. With the new campaign, a normal distribution is observed with a mean of 3.8 minutes and a standard deviation of 0.8 minutes, based on a sample of 45 users.
+
+------------------------------------------------------------------------
+
+### Conversion Rate Analysis
+
+```{r print_results, echo=FALSE}
+print_results <- function(z_score, p_value, alpha){
+  print(paste("Z score: ", round(z_score, 4)))
+  print(paste("P value: ", round(p_value, 4)))
+  print(paste("Alpha: ", alpha))
+  print(paste("P value < alpha: ", p_value < alpha))
+}
+```
+
+#### One-Tailed Test with α = 0.015
+
+To evaluate whether the new campaign significantly improves the conversion rate, a one-tailed hypothesis test will be performed.
+
+[Hypotheses:]{.underline}
+
+-   **H₀**: p ≤ 0.08 (The campaign does not improve the conversion rate)
+
+-   **H₁**: p \> 0.08 (The campaign improves the conversion rate)
+
+[Parameters:]{.underline}
+
+-   Base rate (p₀): 8%
+
+-   Observed rate (p̂): 11%
+
+-   Sample size (n): 350
+
+-   Significance level (α): 0.015
+
+The Z-statistic is calculated as:
+
+$$
+Z = \frac{\hat{p} - p_0}{\sigma} \quad \textrm{where} \quad \sigma = \sqrt{\frac{p_0 (1 - p_0)}{n}}
+$$
+
+Where:
+
+$\hat{p}$ is the observed sample proportion (11%).
+
+$p_{0}$ is the proportion value under the null hypothesis (8%).
+
+$n$ is the sample size (350 observations).
+
+```{r}
+# Parameters
+alpha = 0.015
+p_base = 0.08
+p_observed = 0.11
+n = 350
+
+# Calculations
+sigma = sqrt((p_base*(1-p_base))/n)
+z_score = (p_observed-p_base) / sigma
+p_value <- pnorm(z_score, lower.tail=FALSE)
+
+# Result
+print_results(z_score, p_value, alpha)
+```
+
+**Result:** With a p-value of 0.0194, which is greater than α = 0.015, the null hypothesis cannot be rejected. There is insufficient statistical evidence to conclude that the new campaign improves the conversion rate at this significance level.
+
+#### One-Tailed Test with α = 0.05
+
+Using the same calculations as above but with α = 0.05:
+
+```{r}
+alpha = 0.05
+
+# Result
+print_results(z_score, p_value, alpha)
+```
+
+**Result:** The p-value of 0.0194 is less than α = 0.05, so the null hypothesis is rejected. With this significance level, there is sufficient evidence to conclude that the campaign significantly improves the conversion rate.
+
+#### Minimum Alpha Value
+
+```{r}
+print(paste("Minimum Alpha value: ", round(p_value, 3)))
+```
+
+The minimum value of α to reject the null hypothesis in a one-tailed test is **0.019**, which corresponds exactly to the calculated p-value.
+
+#### **Two-Tailed Test with α = 0.0825**
+
+For a two-tailed test, we consider the possibility that the campaign could either increase or decrease the conversion rate. The p-value is doubled due to the symmetric distribution:
+
+-   Two-tailed p-value: 0.0194 × 2 = 0.0388
+
+-   Comparing with α = 0.0825: 0.0388 \< 0.0825
+
+```{r}
+alpha_bilateral <- 0.0825
+p_value_two_tail <- p_value * 2
+
+# Result
+print_results(z_score, p_value_two_tail, alpha_bilateral)
+```
+
+**Result:** The null hypothesis is rejected, as the two-tailed p-value is less than the established significance level. There is sufficient evidence to conclude that the campaign significantly affects the conversion rate.
+
+#### Minimum Alpha Value for Two-Tailed Test
+
+```{r}
+print(paste("Minimum Alpha: ", round(p_value_two_tail, 3)))
+```
+
+The minimum value of α for a two-tailed test is **0.039**, corresponding to the calculated two-tailed p-value.
+
+#### Comparison of Restrictiveness: One-Tailed vs Two-Tailed Tests
+
+```{r}
+# One-tailed test (right tail, α = 0.05 in one tail)
+z_one_tailed <- qnorm(p = 1 - 0.05)  
+# Two-tailed test (α = 0.05 split into two tails: 0.025 each side)
+z_two_tailed <- qnorm(p = 1 - 0.05/2)
+
+# Results
+cat("Critical Z value (one-tailed, α=0.05):", round(z_one_tailed, 3), "\n")
+cat("Critical Z value (two-tailed, α=0.05): ±", round(z_two_tailed, 3), "\n")
+```
+
+**The two-tailed test is more restrictive than the one-tailed test**. In a two-tailed test, the significance level α is divided between both tails of the distribution (α/2 in each tail), **requiring more extreme critical values to reject H₀.**
+
+With α = 0.05:
+
+-   One-tailed test: critical value Z ≈ 1.645
+
+-   Two-tailed test: critical value Z ≈ ±1.96
+
+For example, with $\alpha$ = 0.05, a one-tailed test concentrates the entire significance level in a single tail (critical Z value ≈ 1.645), whereas the two-tailed test splits $\alpha$ into two equal parts ($\alpha$ / 2 = 0.025 per tail), which raises the critical threshold to 𝑍 = ±1.96. Thus, if we hypothetically had a Z-score of 1.73, it would allow rejecting $H_{0}$ in a one-tailed test (1.73 \> 1.645), but not in a two-tailed test (1.73 \< 1.96), using the same $\alpha$ =0.05. This stricter criterion **reduces the risk of false positives (Type I errors)**, since only clear and substantial effects surpass the more demanding threshold of the two-tailed test.
+
+------------------------------------------------------------------------
+
+### Statistical Power Analysis
+
+Statistical power is the probability of correctly rejecting a false null hypothesis (avoiding Type II errors). A power of 80% is generally considered adequate for most studies.
+
+#### Two-Tailed Test (α = 0.05, power = 80%)
+
+To detect the observed difference (8% vs. 11%) with 80% power, the required number of observations is:
+
+```{r}
+result <- power.prop.test(
+  p1 = p_base,
+  p2 = p_observed,
+  power = 0.8,
+  sig.level = 0.05,
+  alternative = "two.sided"
+)
+result
+```
+
+The current sample size is insufficient to reliably detect the effect with the desired confidence level. The **required number of observations is 1499**.
+
+#### One-Tailed Test (α = 0.05, power = 80%)
+
+```{r}
+result <- power.prop.test(
+  p1 = p_base,
+  p2 = p_observed,
+  power = 0.8,
+  sig.level = 0.05,
+  alternative = "one.sided"
+)
+result
+```
+
+This calculation is essential for planning the experiment, ensuring that the sample size is large enough to detect the expected effect. In the case of a one-tailed test, **1181 observations are needed**—still much higher than the 350 observations used in the test—although fewer than required for the two-tailed test.
+
+**Maximum Power with Limited Sample**
+
+```{r}
+result <- power.prop.test(
+  n=350,
+  p1 = p_base,
+  p2 = p_observed,
+  sig.level = 0.05,
+  alternative = "two.sided"
+)
+result
+```
+
+Statistical power: 27.5%. This power level is well below the standard 80%, indicating a really limited ability to detect the true effect.
+
+**Minimum Required Conversion Rate**
+
+```{r}
+result <- power.prop.test(
+  n=350,
+  p1 = p_base,
+  power = 0.75,
+  sig.level = 0.05,
+  alternative = "one.sided"
+)
+result
+```
+
+Minimum required rate: 13%. This rate is higher than the observed rate (11%), indicating that a larger effect size would be needed to be detected with the current sample.
+
+------------------------------------------------------------------------
+
+### Dwell Time Analysis
+
+#### Z-Test for Independent Samples
+
+To evaluate whether the campaign reduces dwell time on the page:
+
+[Hypotheses:]{.underline}
+
+-   **H₀**: μ₁ ≤ μ₂ : The campaign does not reduce dwell time.
+
+-   **H₁**: μ₁ \> μ₂ : The campaign reduces dwell time.
+
+[Parameters:]{.underline}
+
+-   Mean before: 4.2 minutes (σ₁ = 0.9)
+
+-   Mean after: 3.8 minutes (σ₂ = 0.8)
+
+-   Sample size: 45 per group
+
+-   α = 0.01
+
+The Z-statistic is calculated as:
+
+$$
+Z = \frac{\bar{X}_1 - \bar{X}_2}{\sigma_D}, \quad \text{where} \quad \sigma_D = \sqrt{\frac{\sigma_1^2}{n_1} + \frac{\sigma_2^2}{n_2}}
+$$ Where:
+
+$\bar{X}_{1}$ is the sample mean before the campaign (4.2 minutes).
+
+$\bar{X}_{2}$ is the sample mean after the campaign (3.8 minutes).
+
+$\sigma_{1}^{2}$ and $\sigma_{2}^{2}$ are the population standard deviations before and after the campaign (0.9 and 0.8 minutes).
+
+$n_{1}$ and $n_{2}$ are the sample sizes (both 45 observations).
+
+```{r}
+# Set seed
+set.seed(123)
+
+# Group parameters
+mean_before <- 4.2
+mean_after <- 3.8
+sd_before <- 0.9
+sd_after <- 0.8
+n <- 45
+alpha <- 0.01
+
+# Generate samples (independent)
+sample_before <- rnorm(n, mean = mean_before, sd = sd_before)
+sample_after <- rnorm(n, mean = mean_after, sd = sd_after)
+
+# Calculate sample means
+x_before <- mean(sample_before)
+x_after <- mean(sample_after)
+
+# Calculations
+se <- sqrt((sd_before^2 + sd_after^2) / n)
+z_score <- (x_after - x_before) / se
+p_value <- pnorm(z_score)
+
+# Results
+print_results(z_score, p_value, alpha)
+```
+
+**Result:** With a p-value of approximately 0.0055, which is less than α = 0.01, we reject the null hypothesis. There is statistically significant evidence that the new campaign reduces the average dwell time on the product page. The negative Z-score (-2.54) indicates that the after-campaign mean is significantly lower than the before-campaign mean.
+
+------------------------------------------------------------------------
+
+### Wilcoxon Non-Parametric Test
+
+When the normality assumption is not met, the Wilcoxon test for independent samples (Mann-Whitney U) is used as a robust alternative to parametric tests.
+
+**Non-normal data simulation:** Log-normal distributed data is generated to simulate more realistic conditions where data might be skewed:
+
+-   Control group: log-normal distribution based on 4.2 minutes
+
+-   Treatment group: log-normal distribution based on 3.8 minutes
+
+The Wilcoxon rank-sum test (Mann-Whitney U) compares the distributions of two independent groups by ranking all observations and comparing the sum of ranks between groups.
+
+```{r}
+# Set seed
+set.seed(123)
+
+# Group parameters
+mean_old_button <- 4.2
+mean_new_button <- 3.8
+sd_old_button <- 0.9
+sd_new_button <- 0.8
+n <- 45
+alpha <- 0.01
+
+# Generate data with log-normal distribution
+old_button_times <- rlnorm(n, meanlog = log(mean_old_button), sdlog = 0.3)
+new_button_times <- rlnorm(n, meanlog = log(mean_new_button), sdlog = 0.3)
+
+# Create dataframe
+data <- data.frame(
+  Time = c(old_button_times, new_button_times),
+  Button = rep(c("Old", "New"), each = n)
+)
+
+# Plot with ggplot2
+library(ggplot2)
+ggplot(data, aes(x = Time, fill = Button)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Response Time Distribution by Button Type",
+       x = "Response Time (minutes)",
+       y = "Density") +
+  theme_minimal()
+
+# Perform Wilcoxon test
+wilcox_result <- wilcox.test(old_button_times, new_button_times, alternative = "greater")
+
+# Results
+print(wilcox_result)
+print(paste("Alpha:", alpha))
+print(paste("P value < alpha:", wilcox_result$p.value < alpha))
+
+```
+
+**Result:** The Wilcoxon test yields a p-value of approximately 0.0007, which is well below the significance level α = 0.01. This allows us to reject the null hypothesis and conclude that there is statistically significant evidence that the new button design reduces the response time.
+
+The Wilcoxon test is particularly valuable when dealing with non-normal data, as it makes no assumptions about the underlying distribution and instead compares the ranks of observations. This makes it more robust than parametric tests when dealing with skewed data or outliers, which is common in real-world scenarios like web analytics data.
+
+------------------------------------------------------------------------
+
+### Conclusions
+
+1.  **Conversion Rate Analysis**: The statistical significance of the campaign's effect on conversion rates depends heavily on the chosen significance level. While not significant at α = 0.015, it becomes significant at α = 0.05.
+
+2.  **Power Analysis**: The current sample size (350) provides insufficient power (27.5%) to reliably detect the observed effect size. A much larger sample (1,181-1,499 observations) would be needed for adequate power.
+
+3.  **Dwell Time Analysis**: Both parametric (Z-test) and non-parametric (Wilcoxon) tests provide strong evidence that the campaign reduces dwell time on product pages, suggesting improved user experience and faster decision-making.
+
+4.  **Practical Implications**: While the conversion rate improvement shows promise, the company should consider collecting more data to achieve adequate statistical power before making definitive conclusions about the campaign's effectiveness.
