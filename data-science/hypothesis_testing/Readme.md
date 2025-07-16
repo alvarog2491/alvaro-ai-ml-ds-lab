@@ -36,9 +36,7 @@ The document generates HTML output by default.
 ## Viewing the HTML Report
 To view the HTML report with all visualizations and formatted output:
 
-1. Download the HTML file from the repository
-2. Open locally in your web browser, or
-3. Use GitHub HTML Preview: https://htmlpreview.github.io/?https://github.com/alvarog2491/alvaro-ai-ml-ds-lab/blob/main/data-science/hypothesis_testing/hypothesis_testing.html
+- [GitHub HTML Preview](https://htmlpreview.github.io/?https://github.com/alvarog2491/alvaro-ai-ml-ds-lab/blob/main/data-science/hypothesis_testing/hypothesis_testing.html)
 
 
 ## Author
