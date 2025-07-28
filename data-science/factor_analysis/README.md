@@ -36,8 +36,6 @@ The analysis uses the [Wine Quality dataset](https://archive.ics.uci.edu/dataset
 - `wineAnalyisis.Rmd` - R Markdown source file with complete factor analysis
 - `wineAnalyisis.html` - Generated HTML report with visualizations and results
 - `winequality-red.csv` - Red wine dataset
-- `winequality-white.csv` - White wine dataset (for potential future analysis)
-- `winequality.names` - Dataset documentation and attribute descriptions
 
 ## Requirements
 
