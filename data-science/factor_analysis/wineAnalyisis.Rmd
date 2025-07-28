@@ -1,0 +1,264 @@
+---
+title:    "Factor Analysis of Portuguese Wine Chemical Properties"
+author: "Álvaro Granados Villodre"
+date: "2025-May"
+license:  by-nc-sa
+urlcolor: blue
+output:
+  html_document: 
+    theme:        cosmo 
+    highlight:    tango 
+    toc:          true
+    toc_float:    true
+    code_folding: show
+  epuRate::epurate:
+    toc:             TRUE
+    number_sections: FALSE
+    code_folding:    "show"
+---
+
+```{=html}
+<style>
+body {
+text-align: justify}
+</style>
+```
+
+## Introduction
+
+This project employs **factor analysis** to examine the underlying structure of chemical properties in Portuguese red wine data. The objective is to identify latent factors that explain the relationships between different wine characteristics and to reduce the dimensionality of the dataset while preserving meaningful information about wine composition.
+
+This analysis uses the [Wine Quality dataset](https://archive.ics.uci.edu/dataset/186/wine+quality) from the UCI Machine Learning Repository.\
+The dataset was originally published by Cortez et al. (2009) in their study on modeling wine preferences from physicochemical properties:
+
+> Cortez, P., Cerdeira, A., Almeida, F., Matos, T., & Reis, J. (2009).\
+> *Modeling wine preferences by data mining from physicochemical properties*.\
+> *Decision Support Systems, 47*(4), 547–553. <https://doi.org/10.1016/j.dss.2009.05.016>
+
+The dataset contains comprehensive measurements of various chemical attributes that characterize wine quality and composition. Factor analysis is particularly suitable for this type of data as it can reveal how different chemical properties cluster together and identify the fundamental dimensions that drive wine characteristics.
+
+The analysis focuses on six key chemical variables that represent critical aspects of wine composition:
+
+-   **residual.sugar**: the amount of sugar remaining after fermentation completion
+-   **density**: wine density, primarily influenced by alcohol percentage and sugar content
+-   **pH**: degree of acidity or basicity measured on a scale from 0 to 14
+-   **alcohol**: percentage of alcohol content by volume
+-   **citric.acid**: citric acid concentration, which contributes to wine freshness and flavor complexity
+-   **volatile.acidity**: acetic acid concentration, which at elevated levels produces undesirable vinegar-like characteristics
+
+```{r,warning=FALSE,message=FALSE}
+suppressPackageStartupMessages(library(tidyverse))
+wine_df <- read_delim("winequality-red.csv", 
+                      delim = ";",
+                      show_col_types = FALSE)
+str(wine_df)
+```
+
+## Data Preparation
+
+The dataset preparation involves selecting the relevant variables for factor analysis. The original dataset contains additional variables, but this analysis concentrates on the six chemical properties that provide comprehensive coverage of wine composition characteristics.
+
+```{r,warning=FALSE,message=FALSE}
+selected_variables <- c("residual sugar", "density", "pH", "alcohol", "citric acid", "volatile acidity")
+
+wine_filtered_df <- wine_df %>% select(all_of(selected_variables))
+str(wine_filtered_df)
+```
+
+## Factor Analysis Implementation
+
+The factor analysis is implemented using two factors, as preliminary analysis suggests that wine chemical properties can be effectively summarized into two principal dimensions. The hypothesis is that these factors will represent distinct aspects of wine chemistry, potentially related to acidity characteristics and physical properties.
+
+```{r}
+# Factor analysis computation with 2 factors
+wine_filtered_df.fa <- factanal(wine_filtered_df, factors = 2)
+print(wine_filtered_df.fa)
+```
+
+## Analysis of Variable Representation
+
+The factor analysis results demonstrate significant variation in how well different variables are represented by the extracted factors. Examining the uniquenesses provides insight into variable-specific variance that is not captured by the common factors.
+
+```{r}
+wine_filtered_df.fa$uniquenesses
+```
+
+The **residual sugar** variable exhibits a uniqueness value of 0.87, indicating that 87% of its variance is not explained by the extracted factors. This high uniqueness suggests that residual sugar follows patterns independent of the other variables and may not be well-suited for this two-factor model.
+
+Conversely, **density and citric acid** show uniquenesses of 0.005 each, meaning that virtually all their variance (99.5%) is captured by the factor structure. These variables demonstrate excellent fit within the factorial model.
+
+The communalities (1 - uniquenesses) provide the complementary perspective on shared variance:
+
+```{r}
+# Communality calculation
+communalities <- 1 - wine_filtered_df.fa$uniquenesses
+print(communalities)
+```
+
+**Alcohol and volatile acidity** show communalities of approximately 0.35, indicating that about 35% of their variance is explained by the common factors. This represents moderate but meaningful representation in the factor structure.
+
+## Factor 1 Interpretation
+
+Analysis of Factor 1 loadings reveals the variables that contribute most strongly to this dimension:
+
+```{r}
+# Extract Factor 1 loadings
+factor1_loadings <- wine_filtered_df.fa$loadings[, 1, drop = FALSE]
+
+# Display loadings graphically
+suppressPackageStartupMessages(library(psych))
+print(factor1_loadings)
+fa.diagram(factor1_loadings, cut=0.2, digits=2)
+```
+
+Factor 1 represents an **acidity dimension** with the following loading pattern:
+
+-   **Citric acid** shows a strong positive loading (0.987)
+-   **Volatile acidity** exhibits a negative loading (-0.583)
+-   **pH** demonstrates an inverse relationship (-0.514)
+-   **Density** has a moderate positive loading (0.22)
+
+This factor structure is chemically coherent, as citric acid contributes to beneficial acidity, while high pH (alkalinity) and volatile acidity (associated with wine defects) load negatively on this dimension.
+
+## Factor 2 Interpretation
+
+Factor 2 loadings indicate a different underlying dimension:
+
+```{r}
+# Extract Factor 2 loadings
+factor2_loadings <- wine_filtered_df.fa$loadings[, 2, drop = FALSE]
+
+# Display loadings graphically
+print(factor2_loadings)
+fa.diagram(factor2_loadings, cut=0.2, digits=2)
+```
+
+Factor 2 represents a **physical structure dimension** characterized by:
+
+-   **Density** with a dominant positive loading (0.97)
+-   **Alcohol** showing a strong negative loading (-0.56)
+-   **Residual sugar** and **pH** with moderate positive loadings (0.34 and 0.23)
+
+This factor captures the physical properties of wine, particularly the inverse relationship between density and alcohol content, which reflects fundamental physical chemistry principles.
+
+## Model Adequacy Assessment
+
+The factor solution demonstrates reasonable explanatory power:
+
+```{r}
+wine_filtered_df.fa$loadings
+```
+
+The two-factor model explains 52.4% of total variance, distributed as 27.9% for Factor 1 and 24.5% for Factor 2. This balanced contribution suggests that both factors are meaningful for understanding wine composition.
+
+Using the Kaiser criterion (eigenvalues \> 1), both factors qualify for retention: - Factor 1: eigenvalue = 1.675 - Factor 2: eigenvalue = 1.471
+
+## Validation Through Correlation Analysis
+
+Different rotation methods are applied to confirm factor interpretability and examine the correlation structure:
+
+```{r}
+# Factor analysis with different rotation methods
+wine_filtered_df.fa.none <- factanal(wine_filtered_df, factors = 2, rotation="none")
+wine_filtered_df.fa.varimax <- factanal(wine_filtered_df, factors = 2, rotation="varimax")
+wine_filtered_df.fa.promax <- factanal(wine_filtered_df, factors = 2, rotation="promax")
+
+par(mfrow = c(1,3))
+
+# No rotation plot
+plot(wine_filtered_df.fa.none$loadings[,1], 
+     wine_filtered_df.fa.none$loadings[,2],
+     xlab = "Factor 1", 
+     ylab = "Factor 2", 
+     ylim = c(-1,1),
+     xlim = c(-1,1),
+     main = "No rotation")
+abline(h = 0, v = 0)
+
+# Varimax rotation plot
+plot(wine_filtered_df.fa.varimax$loadings[,1], 
+     wine_filtered_df.fa.varimax$loadings[,2],
+     xlab = "Factor 1", 
+     ylab = "Factor 2", 
+     ylim = c(-1,1),
+     xlim = c(-1,1),
+     main = "Varimax rotation")
+
+# Variable labels
+text(wine_filtered_df.fa.promax$loadings[,1]-0.08, 
+     wine_filtered_df.fa.promax$loadings[,2]+0.08,
+      colnames(wine_filtered_df),
+      col="blue")
+abline(h = 0, v = 0)
+
+# Promax rotation plot
+plot(wine_filtered_df.fa.promax$loadings[,1], 
+     wine_filtered_df.fa.promax$loadings[,2],
+     xlab = "Factor 1", 
+     ylab = "Factor 2",
+     ylim = c(-1,1),
+     xlim = c(-1,1),
+     main = "Promax rotation")
+abline(h = 0, v = 0)
+
+# Correlation matrix analysis
+suppressPackageStartupMessages(library(corrplot))
+wine_correlation_matrix <- cor(wine_filtered_df)
+print(wine_correlation_matrix)
+corrplot(wine_correlation_matrix, method = "square")
+```
+
+The varimax rotation provides optimal simple structure, while the correlation matrix confirms the expected relationships between acidity-related variables and between density and alcohol.
+
+## Relationship Visualization
+
+Scatter plots illustrate the bivariate relationships between key variables:
+
+```{r}
+library(cowplot)
+
+# Create bivariate scatter plots
+density_alcohol_plot <- ggplot(data = wine_filtered_df, aes(x = density, y = alcohol)) +
+  geom_point() +
+  ggtitle("Density vs Alcohol") +
+  theme_minimal()
+
+volatile_acidity_ph_plot <- ggplot(data = wine_filtered_df, aes(x = `volatile acidity`, y = pH)) +
+  geom_point() +
+  ggtitle("Volatile Acidity vs pH") +
+  theme_minimal()
+
+citric_acid_ph_plot <- ggplot(data = wine_filtered_df, aes(x = `citric acid`, y = pH)) +
+  geom_point() +
+  ggtitle("Citric Acid vs pH") +
+  theme_minimal()
+
+citric_volatile_plot <- ggplot(data = wine_filtered_df, aes(x = `citric acid`, y = `volatile acidity`)) +
+  geom_point() +
+  ggtitle("Citric Acid vs Volatile Acidity") +
+  theme_minimal()
+
+# Display plots in grid format
+cowplot::plot_grid(density_alcohol_plot, volatile_acidity_ph_plot, 
+                   citric_acid_ph_plot, citric_volatile_plot, ncol = 2)
+```
+
+The scatter plots confirm linear relationships consistent with the factor structure, particularly the strong inverse relationship between density and alcohol content.
+
+## Results and Discussion
+
+The factor analysis successfully identified two interpretable dimensions underlying Portuguese wine chemical composition:
+
+**Factor 1 - Acidity Profile**: This dimension captures the acid balance in wine, with citric acid loading positively and volatile acidity and pH loading negatively. This factor represents the beneficial acidity that contributes to wine quality and flavor complexity.
+
+**Factor 2 - Physical Structure**: This dimension is dominated by density and its inverse relationship with alcohol content. It represents the physical characteristics that affect wine body and mouthfeel.
+
+The analysis reveals that **residual sugar** is poorly represented in this two-factor model, suggesting that sugar content varies independently of the primary chemical dimensions identified. This finding indicates that residual sugar may require separate analysis or additional factors for comprehensive modeling.
+
+The model accounts for 52.4% of total variance. Variables related to acidity (citric acid, volatile acidity, pH) demonstrate excellent representation in Factor 1, confirming that these variables share common underlying patterns.
+
+## Conclusions
+
+Factor analysis proves effective for understanding the dimensionality of wine chemical data. The two-factor solution provides interpretable dimensions that correspond to meaningful chemical and physical properties. The acidity profile factor captures quality-related chemical characteristics, while the physical structure factor represents fundamental physical properties affecting wine characteristics.
+
+These results have practical implications for wine quality assessment and production monitoring, as they identify the key dimensions that drive chemical variation in Portuguese red wines. The methodology demonstrates the utility of factor analysis for reducing complex chemical datasets to interpretable underlying dimensions while maintaining chemical and physical coherence in the factor structure.
