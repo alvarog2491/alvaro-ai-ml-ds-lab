@@ -43,8 +43,8 @@ project-name/
 ├── data/              # Project-specific datasets
 ├── notebook/          # Jupyter notebooks (Python projects)
 ├── *.Rmd & *.html     # R Markdown files and outputs (R projects)
-├── requirements.txt   # Python dependencies
-└── venv_*/            # Virtual environments (Python projects)
+└── requirements.txt   # Python dependencies
+
 ```
 
 ## 🛠️ Technologies Used
