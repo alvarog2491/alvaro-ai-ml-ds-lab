@@ -1,12 +1,12 @@
 # LLM Evaluation Framework for Smartphone Review Analysis
 
-A learning project to evaluate different large language models (LLMs) from Hugging Face across multiple NLP tasks using smartphone review data.
-
 ## Overview
 
-This notebook tests pre-trained models on four NLP tasks: sentiment analysis, translation, question answering, and summarization. The goal is to understand model capabilities and limitations in real-world text analysis scenarios.
+This project evaluates different large language models (LLMs) from Hugging Face across multiple NLP tasks using smartphone review data. The goal is to understand model capabilities and limitations in real-world text analysis scenarios.
 
-## Tasks Evaluated
+## Methodology
+
+The analysis tests pre-trained models on four NLP tasks:
 
 ### 1. Sentiment Analysis
 - **Model**: [DistilBERT-base-uncased-finetuned-sst-2-english](https://huggingface.co/distilbert/distilbert-base-uncased-finetuned-sst-2-english)
@@ -24,15 +24,25 @@ This notebook tests pre-trained models on four NLP tasks: sentiment analysis, tr
 - **Model**: [cnicu/t5-small-booksum](https://huggingface.co/cnicu/t5-small-booksum)
 - **Task**: Abstractive summarization of reviews
 
-## Repository Structure
+## Dataset
+
+Contains 80+ mobile phone customer reviews with binary sentiment labels (positive/negative). The dataset was specifically created to include challenging cases for model evaluation.
+
+## Files
 
 ```
 ├── data/
 │   ├── phone_reviews.csv          # 80+ smartphone reviews with sentiment labels
 │   └── translation_references.txt # Reference translations for BLEU evaluation
-├── notebook.ipynb                 # Main analysis notebook
+├── notebook/
+│   └── notebook.ipynb             # Main analysis notebook
+├── requirements.txt               # Python dependencies
 └── README.md                      # This file
 ```
+
+## Requirements
+
+**Python Packages:** `transformers`, `torch`, `pandas`, `numpy`, `scikit-learn`, `jupyter`
 
 ## Usage
 
@@ -41,11 +51,18 @@ This notebook tests pre-trained models on four NLP tasks: sentiment analysis, tr
 pip install -r requirements.txt
 ```
 
-2. Run the notebook:
+3. Run the notebook:
 ```bash
-jupyter notebook notebook.ipynb
+jupyter notebook notebook/notebook.ipynb
 ```
 
-## Dataset
+## Key Findings
 
-Contains 80+ mobile phone customer reviews with binary sentiment labels (positive/negative). The dataset was specifically created to include some challenging cases for model evaluation.
+The analysis provides comprehensive evaluation metrics for each NLP task, demonstrating the strengths and limitations of different pre-trained models in processing real-world review data.
+
+## Author
+
+**Álvaro Granados Villodre**  
+Date: 2025
+
+This project is available for academic and educational use.
