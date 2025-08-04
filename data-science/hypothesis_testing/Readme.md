@@ -38,8 +38,8 @@ The analysis uses simulated data based on e-commerce scenarios:
 
 ## Viewing the HTML Report
 
-To view the HTML report with all visualizations and formatted output:
-- [GitHub HTML Preview](https://htmlpreview.github.io/?https://github.com/alvarog2491/alvaro-ai-ml-ds-lab/blob/main/data-science/hypothesis_testing/hypothesis_testing.html)
+To view the HTML report with all visualizations and formatted output, enter the html raw URL on following page:
+- [GitHub HTML Preview](https://htmlpreview.github.io)
 
 ## Key Findings
 

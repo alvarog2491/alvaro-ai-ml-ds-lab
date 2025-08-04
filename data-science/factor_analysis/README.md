@@ -49,8 +49,8 @@ The analysis uses the [Wine Quality dataset](https://archive.ics.uci.edu/dataset
 
 ## Viewing the HTML Report
 
-To view the HTML report with all visualizations and formatted output:
-- [GitHub HTML Preview](https://raw.githubusercontent.com/alvarog2491/alvaro-ai-ml-ds-lab/refs/heads/main/data-science/factor_analysis/wineAnalyisis.html?token=GHSAT0AAAAAADHHORD7MBSJHQIWDRIYVWBM2EKD3RA)
+To view the HTML report with all visualizations and formatted output, enter the html raw URL on following page:
+- [GitHub HTML Preview](https://htmlpreview.github.io)
 
 ## Key Findings
 

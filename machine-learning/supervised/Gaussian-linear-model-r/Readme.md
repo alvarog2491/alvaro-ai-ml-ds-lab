@@ -38,8 +38,8 @@ The analysis uses data from 397 university professors with the following variabl
 
 ## Viewing the HTML Report
 
-To view the HTML report with all visualizations and formatted output:
-- [GitHub HTML Preview](http://htmlpreview.github.io/?https://github.com/alvarog2491/alvaro-ai-ml-ds-lab/blob/main/machine-learning/supervised/Gaussian-linear-model-r/Gaussian_linear_model---Salary_Analysis.html)
+To view the HTML report with all visualizations and formatted output, enter the html raw URL on following page:
+- [GitHub HTML Preview](https://htmlpreview.github.io)
 
 ## Key Findings
 
