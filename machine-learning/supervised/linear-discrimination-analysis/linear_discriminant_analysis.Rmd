@@ -1,0 +1,373 @@
+---
+title:    "Linear Discriminant Analysis for Wine Quality Classification"
+author: "Álvaro Granados Villodre"
+date: "April 2025"
+license:  by-nc-sa
+urlcolor: blue
+output:
+  html_document: 
+    theme:        cosmo 
+    highlight:    tango 
+    toc:          true
+    toc_float:    true
+    code_folding: show
+---
+
+```{=html}
+<style>
+body {
+text-align: justify}
+</style>
+```
+
+# Introduction
+
+This analysis explores the application of Linear Discriminant Analysis (LDA) for classifying Portuguese red wine quality based on physicochemical properties. The dataset contains quality ratings from 3 to 8, and the goal is to develop a classification model using 11 chemical characteristics that define each wine type.
+
+The investigation aims to understand which chemical properties most strongly influence wine quality and how effectively LDA can separate wines into distinct quality categories.
+
+# Linear Discriminant Analysis: Theoretical Background
+
+## Foundations of Linear Discriminant Analysis
+
+Linear Discriminant Analysis (LDA) represents a classical statistical approach to pattern recognition and dimensionality reduction, originally formulated by Ronald Fisher in 1936. The method addresses the fundamental challenge of distinguishing between multiple groups or classes when dealing with high-dimensional data. **In essence, LDA seeks to project multivariate data onto a lower-dimensional space in such a way that class separability is maximized while preserving the most discriminative information.**
+
+The technique operates on the principle of finding linear combinations of features that best separate the classes of interest. **Unlike simple univariate approaches that examine variables independently, LDA considers the relationships between all variables simultaneously**, making it particularly valuable for complex classification problems where individual features may not provide clear separation.
+
+## Mathematical Framework
+
+The core mathematical objective of LDA centers on maximizing the ratio of between-class scatter to within-class scatter. This optimization criterion ensures that the resulting discriminant functions create maximum separation between different classes while minimizing the variability within each class. Formally, this is expressed through the optimization of Fisher's criterion:
+
+$$J = \frac{\text{Between-class scatter}}{\text{Within-class scatter}}$$
+
+The solution to this optimization problem yields a set of linear discriminant functions of the form:
+
+$$LD_k = w_{k1}x_1 + w_{k2}x_2 + ... + w_{kp}x_p$$
+
+where $LD_k$ represents the k-th discriminant function, $w_{ki}$ denotes the discriminant coefficients, and $x_i$ are the original features. For a classification problem with $K$ classes, LDA produces at most $K-1$ discriminant functions, as the dimensionality of the discriminant space is constrained by the number of classes.
+
+Prior probabilities $P(C_k)$ play a crucial role in LDA's classification scheme, representing the baseline likelihood of observing each class before considering any feature information. These priors can be estimated directly from the training data proportions, set uniformly across classes, or specified based on domain expertise. The discriminant coefficients themselves provide direct insight into feature importance, with their magnitude indicating the strength of each variable's contribution to class separation and their sign determining the direction of influence.
+
+## Underlying Assumptions and Model Requirements
+
+**LDA operates under several key statistical assumptions that fundamentally influence its performance and applicability.** The method assumes that features within each class follow a multivariate normal distribution, a requirement that becomes increasingly important as dimensionality increases. Additionally, LDA assumes homoscedasticity, meaning that all classes share the same covariance matrix structure. **This assumption of equal covariance is what allows LDA to use linear decision boundaries for classification.**
+
+The independence assumption requires that observations are statistically independent of one another, preventing issues that might arise from temporal correlation or hierarchical data structures. Furthermore, the method assumes that classes can be effectively separated using linear combinations of the input features, which may not hold when class boundaries are inherently non-linear or when classes exhibit complex geometric relationships in the feature space.
+
+## Computational and Practical Considerations
+
+**One of LDA's primary advantages lies in its computational efficiency and interpretability.** Unlike iterative optimization methods, LDA provides a closed-form analytical solution through eigenvalue decomposition, making it computationally tractable even for moderately high-dimensional problems. **The resulting discriminant coefficients offer direct interpretation of feature importance**, allowing practitioners to understand which variables contribute most significantly to class separation.
+
+However, the method's reliance on strong distributional assumptions can limit its applicability in real-world scenarios. When the normality assumption is violated, LDA may produce suboptimal classification boundaries. Similarly, the equal covariance assumption can be problematic when different classes exhibit varying degrees of spread or correlation patterns. The method also shows sensitivity to outliers, as extreme values can significantly distort the estimation of class means and covariances.
+
+Multicollinearity among features can create instability in coefficient estimates, particularly when the number of features approaches the number of observations. In small sample scenarios, the empirical covariance estimates may be unreliable, leading to poor generalization performance.
+
+## Methodological Context and Alternatives
+
+**Within the broader landscape of classification methods, LDA occupies a unique position by providing both dimensionality reduction and classification capabilities while maintaining high interpretability.** Compared to Quadratic Discriminant Analysis (QDA), LDA imposes the constraint of equal covariance matrices, resulting in linear rather than quadratic decision boundaries. This constraint can be viewed as a form of regularization that often improves performance in high-dimensional or small-sample settings.
+
+Logistic regression shares LDA's linear boundary assumption but operates under weaker distributional assumptions, making it more robust to violations of normality. Support Vector Machines offer greater flexibility through kernel methods but at the cost of interpretability. **The choice between these methods often depends on the specific requirements of the problem, including the importance of interpretability, the validity of distributional assumptions, and the geometric structure of the class boundaries.**
+
+## Interpretation and Practical Application
+
+The interpretation of LDA results requires careful consideration of several key components. Discriminant coefficients provide the most direct insight into variable importance, with larger absolute values indicating greater influence on class separation. Positive coefficients suggest that higher values of the corresponding variable push observations toward higher discriminant scores, while negative coefficients indicate the opposite relationship.
+
+The proportion of trace explained by each discriminant function reveals how the total discriminative information is distributed across the different dimensions. Typically, the first discriminant function captures the majority of class separation, with subsequent functions accounting for progressively smaller proportions of the total variance. This hierarchical structure allows for effective dimensionality reduction by focusing on the most informative discriminant functions.
+
+Visualization of the discriminant space through scatter plots provides valuable insight into class structure and separation quality. Well-separated clusters in the discriminant space indicate successful classification, while overlapping regions suggest areas of classification difficulty. The degree of overlap can inform decisions about model adequacy and the potential need for alternative approaches or additional features.
+
+# Data Preparation
+
+The dataset contains 1,599 wine observations with 11 physicochemical variables. For this analysis, I'll transform the original quality scores (3-8) into three meaningful categories to improve classification performance and interpretability.
+
+The quality variable will be recategorized as follows: - Scores 3-4: "poor" quality - Scores 5-6: "acceptable" quality\
+- Scores 7-8: "good" quality
+
+```{r,warning=FALSE,message=FALSE}
+require(MASS)
+suppressPackageStartupMessages(library(tidyverse))
+wine_df <- read_delim("data/wine_quality.csv", 
+                   delim = ";",
+                   show_col_types = FALSE)
+str(wine_df)
+```
+
+```{r}
+# Recategorize the 'quality' variable and convert to factor
+wine_df <- wine_df %>%
+  mutate(
+    quality = case_when(
+      quality %in% c(3, 4) ~ "poor",
+      quality %in% c(5, 6) ~ "acceptable",
+      quality %in% c(7, 8) ~ "good"
+    ),
+    quality = factor(quality, levels = c("poor", "acceptable", "good"))
+  )
+
+# Check the changes
+table(wine_df$quality)
+```
+
+Next, I'll normalize all explanatory variables to a 0-1 range to ensure equal contribution to the discriminant functions, while preserving the quality labels for classification.
+
+```{r}
+# Normalize dataset variables to 0-1 range
+suppressPackageStartupMessages(library('caret'))
+process <- preProcess(wine_df, method=c("range"), rangeBounds = c(0, 1))
+wine_scaled_df <- predict(process, wine_df)
+str(wine_scaled_df)
+```
+
+## Model Requirements
+
+The model assumes that the features within each class follow a normal distribution and that all classes share the same covariance matrix (homoscedasticity).
+
+```{r}
+library(dplyr)
+
+# Shapiro-Wilk test for each variable and class
+normality_results <- wine_scaled_df %>%
+  select(-quality) %>%
+  colnames() %>%
+  lapply(function(var) {
+    wine_scaled_df %>%
+      group_by(quality) %>%
+      summarise(
+        variable = var,
+        p_value = shapiro.test(get(var))$p.value,
+        .groups = "drop"
+      )
+  }) %>%
+  bind_rows()
+
+normality_results
+```
+
+For model evaluation, I'll split the data into training (70%) and testing (30%) sets, using a fixed seed for reproducible results.
+
+```{r}
+# Create train and test sets
+set.seed(123)
+smp_size <- floor(0.70 * nrow(wine_scaled_df))
+train_ind <- sample(seq_len(nrow(wine_scaled_df)), size = smp_size, replace=FALSE)
+
+wine_scaled_train_df <- wine_scaled_df[train_ind, ]
+wine_scaled_test_df <- wine_scaled_df[-train_ind, ]
+
+print("TRAIN")
+str(wine_scaled_train_df)
+
+print("TEST")
+str(wine_scaled_test_df)
+```
+
+Now I'll train the initial LDA model using the training dataset.
+
+```{r}
+set.seed(123)
+wine_lda_model <- lda(quality ~ ., data = wine_scaled_train_df)
+```
+
+Let's examine the LDA model output to understand the discriminant functions and prior probabilities:
+
+```{r}
+print(wine_lda_model)
+```
+
+## Understanding the LDA Output
+
+The LDA model output provides several key pieces of information:
+
+1.  **Prior probabilities of groups**: These represent the proportion of each quality class in our training data. They serve as our baseline expectations before considering any features.
+
+2.  **Group means**: The average values of each normalized feature for each quality class. These help us understand how different quality wines differ in their chemical composition.
+
+3.  **Coefficients of linear discriminants**: These are the weights ($w_{ki}$) in our discriminant functions. They tell us:
+
+    -   Which chemical properties are most important for distinguishing wine quality
+    -   The direction of influence (positive or negative coefficients)
+    -   The relative importance of each feature in the classification
+
+4.  **Proportion of trace**: This shows how much of the total between-class variance is captured by each discriminant function. Since we have 3 classes, we get 2 discriminant functions (3-1=2).
+
+# Analysis and Results
+
+## Prior Probabilities Analysis
+
+What is the probability that a randomly selected wine from the training set is categorized as "good" quality?
+
+```{r}
+# Extract prior probabilities
+prior_probabilities <- wine_lda_model$prior
+prob_good <- round(prior_probabilities["good"], 2)
+cat("Probability that a random observation is 'good' quality:", prob_good, "\n")
+```
+
+## Discriminant Coefficient Analysis
+
+### Volatile Acidity Impact
+
+Does volatile acidity consistently push observations toward the positive side of both discriminant dimensions?
+
+LDA coefficients indicate how much and in which direction each variable influences the projected position of observations on the discriminant axes (LD1, LD2).
+
+```{r}
+# Extract discriminant coefficients
+lda_coefficients <- wine_lda_model$scaling
+
+# Get volatile acidity coefficients for both discriminant functions
+coef_volatile_acidity_LD1 <- lda_coefficients["`volatile acidity`", "LD1"]
+coef_volatile_acidity_LD2 <- lda_coefficients["`volatile acidity`", "LD2"]
+
+# Display the coefficients
+cat("Volatile acidity coefficient in LD1:", coef_volatile_acidity_LD1, "\n")
+cat("Volatile acidity coefficient in LD2:", coef_volatile_acidity_LD2, "\n")
+```
+
+**The statement is false.** Volatile acidity has a negative coefficient in the first discriminant (LD1 = −2.0643) and positive in the second (LD2 = 7.0747), meaning **it only pushes observations toward the positive side in the second dimension**, while pushing them toward the negative side in the first dimension.
+
+### Citric Acid Significance
+
+Is citric acid non-determinant for class separation in both discriminant dimensions?
+
+LD1 and LD2 are constructed to maximize class separation. If a variable's coefficient is very small or close to zero, we can conclude that variable has little influence on class separation in that dimension.
+
+```{r}
+# Extract citric acid coefficients for both discriminant functions
+coef_citric_acid_LD1 <- lda_coefficients["`citric acid`", "LD1"]
+coef_citric_acid_LD2 <- lda_coefficients["`citric acid`", "LD2"]
+
+# Display the coefficients
+cat("Citric acid coefficient in LD1:", coef_citric_acid_LD1, "\n")
+cat("Citric acid coefficient in LD2:", coef_citric_acid_LD2, "\n")
+
+```
+
+**Citric acid coefficients are LD1: 0.5586 and LD2: 1.3582**. Compared to other variables like sulphates (LD1: 4.9058) or density (LD2: -9.8067), citric acid values are smaller, implying **a relatively low contribution in both dimensions**. While the values aren't zero, they are modest, indicating citric acid provides some information but isn't determinant for class separation.
+
+### Variance Explained Analysis
+
+Is the capture of separability between classes equitable between the dimensions?
+
+To determine if the capture of separability between classes is balanced between the two dimensions (LD1 and LD2), we need to examine the proportion of trace explained by each dimension. The "proportion of trace" represents how much of the total discriminative power is captured by each discriminant function.
+
+**Theoretical Context**: In LDA, the total discriminative information is decomposed across $(K-1)$ discriminant functions, where $K$ is the number of classes. Each function captures orthogonal (uncorrelated) sources of class separation. Ideally, we want most of the discriminative power concentrated in the first few functions for easier interpretation and visualization.
+
+```{r}
+proportion_trace <- wine_lda_model$svd^2 / sum(wine_lda_model$svd^2)
+proportion_trace
+```
+
+-   **LD1** captures **79.54%** of the total variance explained by the model.
+
+-   **LD2** captures **20.46%** of the total variance explained by the model.
+
+**We cannot affirm that separability capture is balanced between the two dimensions**, since LD1 is responsible for most of the separability (approximately 80%), while LD2 captures only around 20%. **LD1 is much more important for class separation than LD2.**
+
+### Acidity and Wine Quality Relationship
+
+Do wines with higher acidity tend to have better quality?
+
+```{r}
+acid_variables <- c('`fixed acidity`', '`volatile acidity`', '`citric acid`', 'pH')
+cat("Means and coefficients of acidity variables:\n\n")
+wine_lda_model$means[,acid_variables]
+lda_coefficients[acid_variables, ]
+```
+
+While some forms of acidity, such as **fixed acidity and citric acid, increase as wine quality improves**, others, like **volatile acidity and pH, tend to worsen**. The coefficients for fixed acidity (0.587) and citric acid (0.558) are positive, indicating that their increase is associated with improved wine quality. Conversely, volatile acidity (-2.064) and pH (-1.395) have negative coefficients, so higher values of these variables are related to lower quality.
+
+### Residual Sugar Impact
+
+Do wines with higher amounts of sugar remaining after fermentation tend to be worse?
+
+```{r}
+cat("Means and coefficients of residual sugar:\n\n")
+wine_lda_model$means[,'`residual sugar`']
+lda_coefficients["`residual sugar`", ]
+```
+
+**We cannot affirm that wines with higher residual sugar are worse.** The mean values of residual sugar are similar across the three quality groups, and the positive coefficient in LD1 (2.036) indicates that residual sugar doesn't show a strong negative relationship with wine quality.
+
+### Alcohol Content and Quality
+
+Do wines with higher alcohol percentages tend to be related to higher quality wines?
+
+```{r}
+cat("Means and coefficients of alcohol:\n\n")
+wine_lda_model$means[,'alcohol']
+lda_coefficients["alcohol", ]
+```
+
+**Yes, there appears to be a relationship between higher alcohol percentage and better quality.** The mean alcohol values increase from 0.278 (poor) to 0.480 (good). Additionally, the positive coefficient in LD1 (3.621) indicates that higher alcohol content is associated with better wine quality.
+
+## Visualization Analysis
+
+Let's visualize the two new dimensions created in a plot where the 3 label categories can be seen by colors. Does LDA adequately segment observations from the two minority classes?
+
+**Theoretical Context**: The visualization shows how our original 11-dimensional data projects onto the 2-dimensional discriminant space. Good class separation in this reduced space indicates that LDA has successfully found linear combinations of features that distinguish between wine quality categories. However, class imbalance and overlapping distributions can make separation challenging, especially for minority classes.
+
+```{r}
+# Function to plot LDA predictions
+plot_lda_predictions <- function(predictions, df, title){
+  
+  # Create a data frame with the first two linear components
+  df_plot <- data.frame(
+    LD1 = predictions$x[, 1],
+    LD2 = predictions$x[, 2],
+    Class = df$quality
+  )
+  
+  # Visualization with ggplot2
+  ggplot(df_plot, aes(x = LD1, y = LD2, color = Class)) +
+    geom_point(size = 2.5, alpha = 0.7) +
+    theme_minimal() +
+    labs(
+      title = paste("Linear Discriminant Analysis (LDA) - ", title) ,
+      x = "Discriminant Component 1",
+      y = "Discriminant Component 2",
+      color = "Quality"
+    ) +
+    scale_color_manual(values = c("poor" = "firebrick", "acceptable" = "steelblue", "good" = "forestgreen"))
+}
+
+# Calculate and plot test predictions
+test_predictions <- predict(wine_lda_model, wine_scaled_test_df)
+plot_lda_predictions(test_predictions, wine_scaled_test_df, "Default Priors")
+```
+
+To check model quality, I predict observations from the previously separated test set.
+
+It can be observed that **elements from the three classes are quite overlapped** and there's a large difference in the number of elements from each class, with "acceptable" being the class with the highest number of observations. Therefore, **LDA doesn't seem to have correctly segmented observations from the two minority classes (poor and good).**
+
+# Conclusions
+
+## Summary of Findings
+
+This study demonstrates the application of Linear Discriminant Analysis to Portuguese red wine quality classification, revealing both the method's analytical capabilities and its practical limitations in addressing class imbalance scenarios. The analysis successfully reduced the dimensionality from 11 physicochemical variables to two interpretable discriminant functions, with the first function capturing approximately 80% of the discriminative power between quality categories.
+
+The investigation identified alcohol content and volatile acidity as the most influential chemical properties for wine quality classification. Alcohol content showed a positive relationship with quality (coefficient: 3.621), while volatile acidity demonstrated a strong negative association (coefficient: -2.064). These findings align with established oenological principles, where higher alcohol content typically correlates with better fermentation outcomes and volatile acidity represents undesirable fermentation byproducts.
+
+The discriminant analysis revealed that wine quality differences manifest primarily along one dominant dimension, as evidenced by the substantial variance proportion captured by the first linear discriminant (LD1: 79.54% vs LD2: 20.46%). This suggests that wine quality assessment, from a physicochemical perspective, follows a relatively straightforward linear progression rather than exhibiting complex multidimensional patterns.
+
+## Methodological Assessment
+
+The study encountered significant challenges related to class imbalance, with "acceptable" quality wines comprising approximately 81% of the dataset, while "poor" and "good" quality wines represented only 4% and 15% respectively. This imbalance fundamentally affected the discriminant analysis performance, particularly in separating minority classes. The visualization of the discriminant space revealed substantial overlap between all three quality categories, indicating that the linear assumptions of LDA may be insufficient for capturing the complex relationships underlying wine quality assessment.
+
+## Alternative Methodological Approaches
+
+Within the broader landscape of classification methods, this analysis reveals important considerations for method selection in wine quality assessment. Quadratic Discriminant Analysis (QDA) might offer improved performance by relaxing the equal covariance assumption, potentially capturing different variance structures across quality categories. The linear decision boundaries imposed by LDA may not adequately represent the natural clustering patterns in wine chemical composition data.
+
+Logistic regression presents an attractive alternative due to its weaker distributional assumptions and robustness to violations of normality. Given the evident class imbalance issues, logistic regression's probabilistic framework might provide more nuanced classification probabilities that better reflect the uncertainty inherent in borderline quality classifications.
+
+Support Vector Machines, particularly with non-linear kernel functions, could address the apparent complexity of the class boundaries that linear methods struggle to capture. However, such approaches would sacrifice the interpretability that makes LDA valuable for understanding which chemical properties drive quality distinctions.
+
+Ensemble methods or resampling techniques specifically designed for imbalanced datasets might provide more practical solutions to the minority class separation problems observed in this study. These approaches could maintain LDA's interpretability while addressing its performance limitations through methodological augmentation.
+
+## Practical Implications
+
+The analysis provides actionable insights for wine quality assessment and production. **The identification of alcohol content and volatile acidity as primary quality indicators offers concrete guidance for winemaking processes.** The relatively minor influence of citric acid and residual sugar suggests that quality improvement efforts might be better focused on fermentation control and acidity management rather than these secondary characteristics.
+
+The study also demonstrates the importance of considering class distribution when selecting analytical methods. While LDA provides valuable insights into the underlying structure of wine quality differences, its practical application for automated quality classification would require additional methodological considerations to address the minority class performance issues.
+
+Future investigations might benefit from exploring feature engineering approaches that could enhance the linear separability assumptions of LDA, or alternatively, from adopting hybrid approaches that combine LDA's interpretability with more flexible classification methods for improved minority class performance.
