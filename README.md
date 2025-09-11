@@ -1,4 +1,4 @@
-# AI/ML/Data Science Projects 🤖📊
+# AI/ML/Data Science Projects
 
 Personal repository for Artificial Intelligence, Machine Learning, and Data Science projects implemented in Python, R, and other technologies.
 
