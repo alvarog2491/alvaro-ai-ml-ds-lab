@@ -199,3 +199,4 @@ cython_debug/
 #  refer to https://docs.anthropic.com/claude/docs/claudeignore
 .claudeignore
 CLAUDE.md
+.claude/
