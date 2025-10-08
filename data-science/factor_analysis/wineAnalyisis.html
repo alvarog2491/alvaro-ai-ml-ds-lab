@@ -1392,8 +1392,9 @@ overflow: visible;
 }
 </style>
 <style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -1404,7 +1405,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -1678,16 +1679,14 @@ text-align: justify}
 </style>
 <div id="introduction" class="section level2">
 <h2>Introduction</h2>
-<p>This project employs <strong>factor analysis</strong> to examine the
-underlying structure of chemical properties in Portuguese red wine data.
-The objective is to identify latent factors that explain the
-relationships between different wine characteristics and to reduce the
-dimensionality of the dataset while preserving meaningful information
-about wine composition.</p>
-<p>This analysis uses the <a href="https://archive.ics.uci.edu/dataset/186/wine+quality">Wine Quality
+<p>This project uses <strong>factor analysis</strong> to explore how
+different chemical properties in Portuguese red wine relate to each
+other. The goal is to find latent factors that explain these
+relationships and reduce the number of dimensions in the dataset without
+losing important information about wine composition.</p>
+<p>The analysis uses the <a href="https://archive.ics.uci.edu/dataset/186/wine+quality">Wine Quality
 dataset</a> from the UCI Machine Learning Repository.<br />
-The dataset was originally published by Cortez et al. (2009) in their
-study on modeling wine preferences from physicochemical properties:</p>
+The dataset was originally published by Cortez et al. (2009):</p>
 <blockquote>
 <p>Cortez, P., Cerdeira, A., Almeida, F., Matos, T., &amp; Reis, J.
 (2009).<br />
@@ -1695,27 +1694,23 @@ study on modeling wine preferences from physicochemical properties:</p>
 properties</em>.<br />
 <em>Decision Support Systems, 47</em>(4), 547–553. <a href="https://doi.org/10.1016/j.dss.2009.05.016" class="uri">https://doi.org/10.1016/j.dss.2009.05.016</a></p>
 </blockquote>
-<p>The dataset contains comprehensive measurements of various chemical
-attributes that characterize wine quality and composition. Factor
-analysis is particularly suitable for this type of data as it can reveal
-how different chemical properties cluster together and identify the
-fundamental dimensions that drive wine characteristics.</p>
-<p>The analysis focuses on six key chemical variables that represent
-critical aspects of wine composition:</p>
+<p>The dataset includes detailed measurements of chemical attributes
+that define wine quality and composition. Factor analysis works well for
+this type of data because it can show how different chemical properties
+group together and reveal the main dimensions that characterize
+wines.</p>
+<p>I’m focusing on six key chemical variables:</p>
 <ul>
-<li><strong>residual.sugar</strong>: the amount of sugar remaining after
-fermentation completion</li>
-<li><strong>density</strong>: wine density, primarily influenced by
-alcohol percentage and sugar content</li>
-<li><strong>pH</strong>: degree of acidity or basicity measured on a
-scale from 0 to 14</li>
-<li><strong>alcohol</strong>: percentage of alcohol content by
-volume</li>
-<li><strong>citric.acid</strong>: citric acid concentration, which
-contributes to wine freshness and flavor complexity</li>
-<li><strong>volatile.acidity</strong>: acetic acid concentration, which
-at elevated levels produces undesirable vinegar-like
-characteristics</li>
+<li><strong>residual.sugar</strong>: sugar remaining after
+fermentation</li>
+<li><strong>density</strong>: wine density (affected by alcohol and
+sugar content)</li>
+<li><strong>pH</strong>: acidity level on a 0-14 scale</li>
+<li><strong>alcohol</strong>: alcohol content by volume</li>
+<li><strong>citric.acid</strong>: citric acid level (adds freshness and
+complexity)</li>
+<li><strong>volatile.acidity</strong>: acetic acid level (high amounts
+create a vinegar taste)</li>
 </ul>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">suppressPackageStartupMessages</span>(<span class="fu">library</span>(tidyverse))</span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>wine_df <span class="ot">&lt;-</span> <span class="fu">read_delim</span>(<span class="st">&quot;winequality-red.csv&quot;</span>, </span>
@@ -1754,10 +1749,9 @@ characteristics</li>
 </div>
 <div id="data-preparation" class="section level2">
 <h2>Data Preparation</h2>
-<p>The dataset preparation involves selecting the relevant variables for
-factor analysis. The original dataset contains additional variables, but
-this analysis concentrates on the six chemical properties that provide
-comprehensive coverage of wine composition characteristics.</p>
+<p>For this analysis, I’m selecting the six chemical variables listed
+above. The original dataset has more variables, but these six give good
+coverage of the main chemical properties.</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>selected_variables <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;residual sugar&quot;</span>, <span class="st">&quot;density&quot;</span>, <span class="st">&quot;pH&quot;</span>, <span class="st">&quot;alcohol&quot;</span>, <span class="st">&quot;citric acid&quot;</span>, <span class="st">&quot;volatile acidity&quot;</span>)</span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a></span>
 <span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>wine_filtered_df <span class="ot">&lt;-</span> wine_df <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="fu">all_of</span>(selected_variables))</span>
