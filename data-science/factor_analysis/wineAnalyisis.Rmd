@@ -26,25 +26,25 @@ text-align: justify}
 
 ## Introduction
 
-This project employs **factor analysis** to examine the underlying structure of chemical properties in Portuguese red wine data. The objective is to identify latent factors that explain the relationships between different wine characteristics and to reduce the dimensionality of the dataset while preserving meaningful information about wine composition.
+This project uses **factor analysis** to explore how different chemical properties in Portuguese red wine relate to each other. The goal is to find latent factors that explain these relationships and reduce the number of dimensions in the dataset without losing important information about wine composition.
 
-This analysis uses the [Wine Quality dataset](https://archive.ics.uci.edu/dataset/186/wine+quality) from the UCI Machine Learning Repository.\
-The dataset was originally published by Cortez et al. (2009) in their study on modeling wine preferences from physicochemical properties:
+The analysis uses the [Wine Quality dataset](https://archive.ics.uci.edu/dataset/186/wine+quality) from the UCI Machine Learning Repository.\
+The dataset was originally published by Cortez et al. (2009):
 
 > Cortez, P., Cerdeira, A., Almeida, F., Matos, T., & Reis, J. (2009).\
 > *Modeling wine preferences by data mining from physicochemical properties*.\
 > *Decision Support Systems, 47*(4), 547–553. <https://doi.org/10.1016/j.dss.2009.05.016>
 
-The dataset contains comprehensive measurements of various chemical attributes that characterize wine quality and composition. Factor analysis is particularly suitable for this type of data as it can reveal how different chemical properties cluster together and identify the fundamental dimensions that drive wine characteristics.
+The dataset includes detailed measurements of chemical attributes that define wine quality and composition. Factor analysis works well for this type of data because it can show how different chemical properties group together and reveal the main dimensions that characterize wines.
 
-The analysis focuses on six key chemical variables that represent critical aspects of wine composition:
+I'm focusing on six key chemical variables:
 
--   **residual.sugar**: the amount of sugar remaining after fermentation completion
--   **density**: wine density, primarily influenced by alcohol percentage and sugar content
--   **pH**: degree of acidity or basicity measured on a scale from 0 to 14
--   **alcohol**: percentage of alcohol content by volume
--   **citric.acid**: citric acid concentration, which contributes to wine freshness and flavor complexity
--   **volatile.acidity**: acetic acid concentration, which at elevated levels produces undesirable vinegar-like characteristics
+-   **residual.sugar**: sugar remaining after fermentation
+-   **density**: wine density (affected by alcohol and sugar content)
+-   **pH**: acidity level on a 0-14 scale
+-   **alcohol**: alcohol content by volume
+-   **citric.acid**: citric acid level (adds freshness and complexity)
+-   **volatile.acidity**: acetic acid level (high amounts create a vinegar taste)
 
 ```{r,warning=FALSE,message=FALSE}
 suppressPackageStartupMessages(library(tidyverse))
@@ -56,7 +56,7 @@ str(wine_df)
 
 ## Data Preparation
 
-The dataset preparation involves selecting the relevant variables for factor analysis. The original dataset contains additional variables, but this analysis concentrates on the six chemical properties that provide comprehensive coverage of wine composition characteristics.
+For this analysis, I'm selecting the six chemical variables listed above. The original dataset has more variables, but these six give good coverage of the main chemical properties.
 
 ```{r,warning=FALSE,message=FALSE}
 selected_variables <- c("residual sugar", "density", "pH", "alcohol", "citric acid", "volatile acidity")

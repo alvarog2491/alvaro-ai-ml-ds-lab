@@ -22,17 +22,17 @@ text-align: justify}
 
 # Introduction
 
-This analysis explores the application of Linear Discriminant Analysis (LDA) for classifying Portuguese red wine quality based on physicochemical properties. The dataset contains quality ratings from 3 to 8, and the goal is to develop a classification model using 11 chemical characteristics that define each wine type.
+This analysis explores using Linear Discriminant Analysis (LDA) to classify Portuguese red wine quality based on chemical properties. The dataset has quality ratings from 3 to 8, and I'll build a classification model using 11 chemical characteristics.
 
-The investigation aims to understand which chemical properties most strongly influence wine quality and how effectively LDA can separate wines into distinct quality categories.
+The goal is to figure out which chemical properties matter most for wine quality and see how well LDA can separate wines into different quality categories.
 
 # Linear Discriminant Analysis: Theoretical Background
 
 ## Foundations of Linear Discriminant Analysis
 
-Linear Discriminant Analysis (LDA) represents a classical statistical approach to pattern recognition and dimensionality reduction, originally formulated by Ronald Fisher in 1936. The method addresses the fundamental challenge of distinguishing between multiple groups or classes when dealing with high-dimensional data. **In essence, LDA seeks to project multivariate data onto a lower-dimensional space in such a way that class separability is maximized while preserving the most discriminative information.**
+Linear Discriminant Analysis (LDA) is a classical statistical method for pattern recognition and dimensionality reduction, developed by Ronald Fisher in 1936. **LDA projects multivariate data onto a lower-dimensional space to maximize class separability while keeping the most discriminative information.**
 
-The technique operates on the principle of finding linear combinations of features that best separate the classes of interest. **Unlike simple univariate approaches that examine variables independently, LDA considers the relationships between all variables simultaneously**, making it particularly valuable for complex classification problems where individual features may not provide clear separation.
+The technique finds linear combinations of features that best separate different classes. **Unlike univariate approaches that look at variables one at a time, LDA considers all variables together**, which is particularly useful when individual features don't clearly separate the classes on their own.
 
 ## Mathematical Framework
 
